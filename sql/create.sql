@@ -37,6 +37,7 @@ create table belong_to_room(
     user_id int not null,
     constraint fk_room_belong foreign key (room_id) references room(room_id) on delete cascade,
     constraint fk_user_belong foreign key (user_id) references users(user_id) on delete cascade
+    constraint pk_belong_to_room primary key (room_id, user_id)
 );
 
 drop table if exists local_user;
