@@ -26,7 +26,7 @@ export default class TransactionController {
         const type = ctx.request.input('type');
         const target_user_id = ctx.request.input('target_user_id');
 
-        if(!await this.checkIfInRoom(user.id, room_id)) {
+        if(!await this.checkIfInRoom(user.user_id, room_id)) {
             return {
                 message: 'user not in room',
                 data: []
@@ -42,7 +42,7 @@ export default class TransactionController {
                 title: title,
                 type: type,
                 sender_id: target_user_id,
-                receiver_id: user.id,
+                receiver_id: user.user_id,
             }).returning('transaction_id');
         } else {
             create_transaction = await Database.table('transaction').insert({
@@ -50,7 +50,7 @@ export default class TransactionController {
                 amount: amount,
                 title: title,
                 type: type,
-                sender_id: user.id,
+                sender_id: user.user_id,
                 receiver_id: target_user_id,
             }).returning('transaction_id');
         }

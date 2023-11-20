@@ -1,6 +1,6 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import Database from '@ioc:Adonis/Lucid/Database'
-import User from 'App/Models/User'
+import User from 'App/Models/LocalAuth'
 
 export default class UserController {
     public async index(ctx: HttpContextContract) {
@@ -34,6 +34,7 @@ export default class UserController {
         const local_user = await User.create({
             email: email,
             password: password,
+            user_id: user_id_data[0].user_id,
         })
 
         const user_federal_auth = await Database.table('federal_credentials').insert({

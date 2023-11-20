@@ -44,15 +44,17 @@ create table belong_to_room(
     constraint pk_belong_to_room primary key (room_id, user_id)
 );
 
-drop table if exists local_user;
+drop table if exists auth_user;
 
-create table local_user(
+create table auth_user(
     id serial primary key,
     email text not null,
-    password text not null,
+    password text,
     remember_me_token text,
+    user_id int not null,
     created_at timestamp default now(),
-    updated_at timestamp default now()
+    updated_at timestamp default now(),
+    constraint fk_user_federal foreign key (user_id) references users(user_id) on delete cascade
 );
 
 drop table if exists federal_credentials;
@@ -62,8 +64,7 @@ create table federal_credentials(
     auth_user_id int not null,
     user_id int not null,
     auth_provider text not null,
-    constraint fk_local_user foreign key (auth_user_id) references local_user(id) on delete cascade,
-    constraint fk_user_federal foreign key (user_id) references users(user_id) on delete cascade
+    constraint fk_auth_user foreign key (auth_user_id) references auth_user(id) on delete cascade
 );
 
 drop table if exists api_tokens;
