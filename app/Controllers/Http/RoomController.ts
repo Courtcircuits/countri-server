@@ -103,6 +103,5 @@ export default class RoomController {
             message: 'room joined',
             data: join_room
         };
-
     }
-}
+}   
