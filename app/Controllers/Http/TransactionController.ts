@@ -3,7 +3,7 @@ import Database from '@ioc:Adonis/Lucid/Database';
 
 export default class TransactionController {
     public async checkIfInRoom(user_id: number, room_id: number):Promise<boolean> {
-        const check = await Database.from('room_user').where('user_id', user_id).andWhere('room_id', room_id);
+        const check = await Database.from('belong_to_room').where('user_id', user_id).andWhere('room_id', room_id);
         if (check.length === 0) {
             return false;
         }
@@ -29,6 +29,12 @@ export default class TransactionController {
         if(!await this.checkIfInRoom(user.user_id, room_id)) {
             return {
                 message: 'user not in room',
+                data: []
+            };
+        }
+        if(!await this.checkIfInRoom(target_user_id, room_id)) {
+            return {
+                message: 'target user not in room',
                 data: []
             };
         }
