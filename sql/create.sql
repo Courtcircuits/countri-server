@@ -5,10 +5,9 @@ drop table if exists room cascade;
 
 create table room(
     room_id serial primary key,
-    title text not null
+    title text not null,
+    invite_code text,
 );
-
-
 
 create table users(
     user_id serial primary key,

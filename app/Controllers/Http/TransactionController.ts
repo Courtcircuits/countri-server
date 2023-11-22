@@ -1,15 +1,8 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import Database from '@ioc:Adonis/Lucid/Database';
+import Transaction from 'App/Models/Transaction';
+import { checkIfInRoom } from 'App/Utils/room_utils';
 
 export default class TransactionController {
-    public async checkIfInRoom(user_id: number, room_id: number):Promise<boolean> {
-        const check = await Database.from('belong_to_room').where('user_id', user_id).andWhere('room_id', room_id);
-        if (check.length === 0) {
-            return false;
-        }
-        return true;
-    }
-
     public async create(ctx: HttpContextContract) {
         await ctx.auth.use('api').authenticate();
         const user = ctx.auth.use('api').user;
@@ -20,50 +13,68 @@ export default class TransactionController {
             };
         }
 
-        const room_id = ctx.request.input('room_id');
+        let room_id: number;
+        let target_user_id: number;
+
+        try {
+            room_id = parseInt(ctx.request.input('room_id'));
+        } catch (e) {
+            return {
+                message: 'room_id not found',
+                data: []
+            };
+        }
+
         const amount = ctx.request.input('amount');
         const title = ctx.request.input('title');
         const type = ctx.request.input('type');
-        const target_user_id = ctx.request.input('target_user_id');
+        try {
+            target_user_id = parseInt(ctx.request.input('target_user_id'));
+        } catch (e) {
+            return {
+                message: 'target_user_id not found',
+                data: []
+            };
+        }
 
-        if(!await this.checkIfInRoom(user.user_id, room_id)) {
+        if (!await checkIfInRoom(user.user_id, room_id)) {
             return {
                 message: 'user not in room',
                 data: []
             };
         }
-        if(!await this.checkIfInRoom(target_user_id, room_id)) {
+        if (!await checkIfInRoom(target_user_id, room_id)) {
             return {
                 message: 'target user not in room',
                 data: []
             };
         }
 
-        let create_transaction;
+        let create_transaction: Transaction;
 
-        if (type === "Debt") { // in this case the user is the receiver and the target_user is the sender
-            create_transaction = await Database.table('transaction').insert({
+        if (type === "debt") { // in this case the user is the receiver and the target_user is the sender
+            create_transaction = await Transaction.create({
                 room_id: room_id,
                 amount: amount,
                 title: title,
                 type: type,
                 sender_id: target_user_id,
                 receiver_id: user.user_id,
-            }).returning('transaction_id');
+            });
         } else {
-            create_transaction = await Database.table('transaction').insert({
+            create_transaction = await Transaction.create({
                 room_id: room_id,
                 amount: amount,
                 title: title,
                 type: type,
                 sender_id: user.user_id,
                 receiver_id: target_user_id,
-            }).returning('transaction_id');
+            });
         }
 
         return {
             message: 'transaction created',
-            data: create_transaction
+            transaction: create_transaction.toJSON()
         };
     }
 }
