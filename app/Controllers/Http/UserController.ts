@@ -48,4 +48,26 @@ export default class UserController {
             }
         }
     }
+
+    public async listRooms(ctx: HttpContextContract) {
+        await ctx.auth.use('api').authenticate()
+        const user = await (await ctx.auth.use('api').user)?.related('user').query().first()
+        if (!user) {
+            return {
+                message: 'user not found',
+                data: []
+            }
+        }
+        const rooms = await user.related('rooms').query()
+        return {
+            message: 'rooms found',
+            data: rooms.map((room) => {
+                return {
+                    id: room.id,
+                    name: room.name
+                }
+            }
+            )
+        }
+    }
 }

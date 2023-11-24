@@ -147,7 +147,16 @@ export default class RoomController {
     }
 
     public async update(ctx: HttpContextContract) {
-        const room_id = ctx.request.input('room_id');
+        let room_id: number;
+        try{
+            room_id = parseInt(ctx.request.input('room_id'));
+        }catch(e){
+            ctx.response.status(500);
+            return {
+                message: 'room id is not a number',
+            };
+        }
+
         const room_name = ctx.request.input('name');
         try {
             const room = await Room.findOrFail(room_id)
@@ -260,6 +269,168 @@ export default class RoomController {
         return {
             message: 'users found',
             data: users
+        };
+    }
+    
+    // delete someone from a room
+    public async kick(ctx: HttpContextContract) {
+        await ctx.auth.use('api').authenticate();
+        let room_id: number;
+        try{
+            room_id = parseInt(ctx.request.input('room_id'));
+        }catch(e){ 
+            ctx.response.status(500);
+            return {
+                message: 'roomt_id must be a number',
+            };
+        }
+
+        let user_id: number;
+        try{
+            user_id = parseInt(ctx.request.input('user_id'));
+        }catch(e){
+            ctx.response.status(500);
+            return {
+                message: 'user_id must be a number',
+            };
+        }
+
+        let room: Room;
+
+        try {
+            room = await Room.findOrFail(room_id);
+        } catch (e) {
+            ctx.response.status(404);
+            return {
+                message: 'room not found',
+                data: []
+            };
+        }
+
+        if (!await checkIfInRoom(user_id, room)) {
+            ctx.response.status(400);
+            return {
+                message: 'user not in room',
+                data: []
+            };
+        }
+
+        await room.related('users').detach([user_id]);
+
+        return {
+            message: 'user left room',
+        };
+    }
+
+    public async destroy(ctx: HttpContextContract) {
+        await ctx.auth.use('api').authenticate();
+        let room_id: number;
+        try{
+            room_id = parseInt(ctx.request.input('room_id'));
+        }catch(e){
+            ctx.response.status(500);
+            return {
+                message: 'room_id must be a number',
+            };
+        }
+
+        const user_id = ctx.auth.use('api').user?.user_id;
+
+        if(!user_id) {
+            ctx.response.status(401);
+            return {
+                message: 'user not found',
+                data: []
+            };
+        }
+
+
+
+        let room: Room;
+
+        try {
+            room = await Room.findOrFail(room_id);
+        } catch (e) {
+            ctx.response.status(404);
+            return {
+                message: 'room not found',
+                data: []
+            };
+        }
+
+
+        if (!await checkIfInRoom(user_id, room)) {
+            ctx.response.status(400);
+            return {
+                message: 'user not in room',
+                data: []
+            };
+        }
+
+        try{
+            await room.delete();
+        }catch(e){
+            console.log(e);
+            ctx.response.status(500);
+            return {
+                message: 'room failed to delete',
+                data: []
+            };
+        }
+
+        return {
+            message: 'room deleted',
+        };
+    }
+
+    public async joinWithLink(ctx: HttpContextContract) {
+        const invite_code = ctx.params.invite_code;
+        const user = ctx.auth.use('api').user;
+        let user_id: number | null;
+        if (!user) { // join is also used for creating room so we need to check if user is logged in or not
+            user_id = (await ctx.auth.use('api').authenticate()).user_id;
+        } else {
+            user_id = user.id;
+        }
+
+        if (!user_id) {
+            ctx.response.status(401);
+            return {
+                message: 'user not found',
+                data: []
+            };
+        }
+
+        let room: Room;
+
+        try {
+            room = await Room.findByOrFail('invite_code', invite_code);
+        } catch (e) {
+            ctx.response.status(404);
+            return {
+                message: 'room not found',
+                data: []
+            };
+        }
+
+        let hasBeenCreated: boolean;
+        try {
+            hasBeenCreated = await this.joinRoom(room, user_id);
+        } catch (e) {
+            ctx.response.status(400);
+            return {
+                message: 'room already joined',
+            };
+        }
+
+        if (!hasBeenCreated) {
+            ctx.response.status(500);
+            return {
+                message: 'room not joined',
+            };
+        }
+        return {
+            message: 'room joined',
         };
     }
 }

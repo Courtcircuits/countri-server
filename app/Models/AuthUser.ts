@@ -12,7 +12,10 @@ export default class AuthUser extends BaseModel {
   @column()
   public user_id: number
 
-  @hasOne(() => User)
+  @hasOne(() => User, {
+    foreignKey: 'id',
+    localKey: 'user_id'
+  })
   public user: HasOne<typeof User>
 
   @column({ serializeAs: null })
