@@ -6,6 +6,90 @@ import { checkIfInRoom } from 'App/Utils/room_utils';
 import Transaction from 'App/Models/Transaction';
 
 export default class RoomController {
+    public async get(ctx: HttpContextContract) {
+        const user = ctx.auth.user;  
+        if (!user) {
+            return {
+                message: 'user not found',
+                data: []
+            };
+        }
+        let room_id: number;
+        try{
+            room_id = ctx.params.id;
+        }catch(e){
+            ctx.response.status(400);
+            return {
+                message: 'room_id not found',
+                data: []
+            };
+        }
+
+        const toReturn: {
+            name: string,
+            id: string,
+            members: string[],
+            transactions: {
+                amount: number,
+                date: string,
+                receiver: string,
+                sender: string,
+                title: string,
+            }[]
+        } = {
+            name: "",
+            id: "0",
+            members: [],
+            transactions:[]
+        }
+
+        let room: Room;
+        try {
+            room = await Room.findOrFail(room_id);
+        }catch(e){
+            ctx.response.status(404);
+            return {
+                message: 'room not found',
+                data: []
+            };
+        }
+
+        if (!await checkIfInRoom(user.user_id, room)) {
+            ctx.response.status(400);
+            return {
+                message: 'user not in room',
+                data: []
+            };
+        }
+
+        toReturn.name = room.name;
+        toReturn.id = room.id.toString();
+
+        const users = await room.related('users').query().where('room_id', room_id);
+        toReturn.members = users.map((user) => user.name);
+
+
+        
+
+        let transactions: Transaction[];
+        try{
+
+            transactions = await room.related('transactions').query().where('room_id', room_id);
+        }catch(e){
+            return toReturn;
+        }
+        toReturn.transactions = transactions.map((transaction) => {
+            return {
+                amount: transaction.amount,
+                date: transaction.createdAt.toString(),
+                receiver: transaction.receiver.name,
+                sender: transaction.sender.name,
+                title: transaction.title,
+            }
+        });
+        return toReturn;
+    }
+
     public async getInviteCode(ctx: HttpContextContract) {
         await ctx.auth.use('api').authenticate();
         const user = ctx.auth.use('api').user;
@@ -15,7 +99,7 @@ export default class RoomController {
                 data: []
             };
         }
-        const room_id = ctx.request.input('room_id');
+        const room_id = ctx.params.id
         let invite_code;
 
         try {
@@ -96,7 +180,7 @@ export default class RoomController {
         await ctx.auth.use('api').authenticate();
         let room_id: number;
         try {
-            room_id = parseInt(ctx.request.input('room_id'));
+            room_id = parseInt(ctx.params.id);
         } catch (e) {
             ctx.response.status(400);
             return {
@@ -149,7 +233,7 @@ export default class RoomController {
     public async update(ctx: HttpContextContract) {
         let room_id: number;
         try{
-            room_id = parseInt(ctx.request.input('room_id'));
+            room_id = parseInt(ctx.params.id);
         }catch(e){
             ctx.response.status(500);
             return {
@@ -239,7 +323,7 @@ export default class RoomController {
         let room: Room;
 
         try {
-            room = await Room.findOrFail(ctx.request.input('room_id'));
+            room = await Room.findOrFail(ctx.params.id);
         } catch (e) {
             ctx.response.status(404);
             return {
@@ -277,7 +361,7 @@ export default class RoomController {
         await ctx.auth.use('api').authenticate();
         let room_id: number;
         try{
-            room_id = parseInt(ctx.request.input('room_id'));
+            room_id = parseInt(ctx.params.id);
         }catch(e){ 
             ctx.response.status(500);
             return {
@@ -326,7 +410,7 @@ export default class RoomController {
         await ctx.auth.use('api').authenticate();
         let room_id: number;
         try{
-            room_id = parseInt(ctx.request.input('room_id'));
+            room_id = parseInt(ctx.params.id);
         }catch(e){
             ctx.response.status(500);
             return {
