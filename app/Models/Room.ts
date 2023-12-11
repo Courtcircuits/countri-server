@@ -3,6 +3,7 @@ import { BaseModel, HasMany, ManyToMany, beforeCreate, column, hasMany, manyToMa
 import { randomUUID } from 'node:crypto'
 import Transaction from './Transaction'
 import User from './User'
+import Invite from './Invite'
 
 export default class Room extends BaseModel {
   @column({ isPrimary: true })
@@ -18,6 +19,9 @@ export default class Room extends BaseModel {
     pivotTable: 'room_user'
   })
   public users: ManyToMany<typeof User>
+
+  @hasMany(() => Invite)
+  public invites: HasMany<typeof Invite>
 
   @column()
   public invite_code: string
