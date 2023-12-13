@@ -41,7 +41,7 @@ export default class InviteController {
         return response.json(invite);
     }
 
-    public async join({ request, response, auth, params: { uuid } }) {
+    public async join({ response, auth, params: { uuid } }) {
         console.log(uuid);
         const sender_id = auth.user.id;
         let invite: Invite;
@@ -68,7 +68,7 @@ export default class InviteController {
         return response.json(invite);
     }
 
-    public async delete({ request, response, auth, params: { uuid } }) {
+    public async delete({ response, auth, params: { uuid } }) {
         const user_id = auth.user.id;
         let invite: Invite;
         try {
@@ -93,7 +93,7 @@ export default class InviteController {
     }
 
 
-    public async getAll({ request, response, auth }) {
+    public async getAll({ response, auth }) {
         const user_id = auth.user.id;
         const invites = await Invite.query().where('receiver_id', user_id);
         let invites_data: InviteData[] = [];

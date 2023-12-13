@@ -7,7 +7,7 @@ import Transaction from 'App/Models/Transaction';
 
 export default class RoomController {
     public async get(ctx: HttpContextContract) {
-        const user = ctx.auth.user;  
+        const user = ctx.auth.user;
         if (!user) {
             return {
                 message: 'user not found',
@@ -15,9 +15,9 @@ export default class RoomController {
             };
         }
         let room_id: number;
-        try{
+        try {
             room_id = ctx.params.id;
-        }catch(e){
+        } catch (e) {
             ctx.response.status(400);
             return {
                 message: 'room_id not found',
@@ -28,7 +28,10 @@ export default class RoomController {
         const toReturn: {
             name: string,
             id: string,
-            members: string[],
+            members: {
+                name: string,
+                id: string,
+            }[],
             transactions: {
                 amount: number,
                 date: string,
@@ -40,13 +43,13 @@ export default class RoomController {
             name: "",
             id: "0",
             members: [],
-            transactions:[]
+            transactions: []
         }
 
         let room: Room;
         try {
             room = await Room.findOrFail(room_id);
-        }catch(e){
+        } catch (e) {
             ctx.response.status(404);
             return {
                 message: 'room not found',
@@ -66,27 +69,36 @@ export default class RoomController {
         toReturn.id = room.id.toString();
 
         const users = await room.related('users').query().where('room_id', room_id);
-        toReturn.members = users.map((user) => user.name);
-
-
-        
-
-        let transactions: Transaction[];
-        try{
-
-            transactions = await room.related('transactions').query().where('room_id', room_id);
-        }catch(e){
-            return toReturn;
-        }
-        toReturn.transactions = transactions.map((transaction) => {
+        toReturn.members = users.map((user) => {
             return {
-                amount: transaction.amount,
-                date: transaction.createdAt.toString(),
-                receiver: transaction.receiver.name,
-                sender: transaction.sender.name,
-                title: transaction.title,
+                name: user.name,
+                id: user.id.toString()
             }
         });
+
+        let transactions: Transaction[];
+        try {
+            transactions = await Transaction.query().where('room_id', room_id);
+        } catch (e) {
+            console.log(e);
+            return toReturn;
+        }
+
+        for (const transaction of transactions) {
+            const receiver = await User.findOrFail(transaction.receiver_id);
+            const sender = await User.findOrFail(transaction.sender_id);
+
+            toReturn.transactions.push({
+                amount: transaction.amount,
+                date: transaction.createdAt.toString(),
+                receiver: receiver.name,
+                sender: sender.name,
+                title: transaction.title,
+            });
+        }
+        toReturn.transactions.sort((a, b) => {
+            return Date.parse(b.date) - Date.parse(a.date);
+        });    
         return toReturn;
     }
 
@@ -232,9 +244,9 @@ export default class RoomController {
 
     public async update(ctx: HttpContextContract) {
         let room_id: number;
-        try{
+        try {
             room_id = parseInt(ctx.params.id);
-        }catch(e){
+        } catch (e) {
             ctx.response.status(500);
             return {
                 message: 'room id is not a number',
@@ -355,14 +367,14 @@ export default class RoomController {
             data: users
         };
     }
-    
+
     // delete someone from a room
     public async kick(ctx: HttpContextContract) {
         await ctx.auth.use('api').authenticate();
         let room_id: number;
-        try{
+        try {
             room_id = parseInt(ctx.params.id);
-        }catch(e){ 
+        } catch (e) {
             ctx.response.status(500);
             return {
                 message: 'roomt_id must be a number',
@@ -370,9 +382,9 @@ export default class RoomController {
         }
 
         let user_id: number;
-        try{
+        try {
             user_id = parseInt(ctx.request.input('user_id'));
-        }catch(e){
+        } catch (e) {
             ctx.response.status(500);
             return {
                 message: 'user_id must be a number',
@@ -409,9 +421,9 @@ export default class RoomController {
     public async destroy(ctx: HttpContextContract) {
         await ctx.auth.use('api').authenticate();
         let room_id: number;
-        try{
+        try {
             room_id = parseInt(ctx.params.id);
-        }catch(e){
+        } catch (e) {
             ctx.response.status(500);
             return {
                 message: 'room_id must be a number',
@@ -420,7 +432,7 @@ export default class RoomController {
 
         const user_id = ctx.auth.use('api').user?.user_id;
 
-        if(!user_id) {
+        if (!user_id) {
             ctx.response.status(401);
             return {
                 message: 'user not found',
@@ -451,9 +463,9 @@ export default class RoomController {
             };
         }
 
-        try{
+        try {
             await room.delete();
-        }catch(e){
+        } catch (e) {
             console.log(e);
             ctx.response.status(500);
             return {

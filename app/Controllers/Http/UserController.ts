@@ -65,8 +65,18 @@ export default class UserController {
 
         const tokens = await ctx.auth.use('api').attempt(email, password)
         ctx.response.cookie('token', tokens.token)
+        const user = await (await ctx.auth.use('api').user)?.related('user').query().first()
+        if (!user) {
+            return {
+                message: 'user not found',
+                data: []
+            }
+        }
+        const rooms = await user.related('rooms').query()
+        
         return {
-            data: tokens
+            tokens: tokens,
+            room: rooms[0].id
         }
     }
 
