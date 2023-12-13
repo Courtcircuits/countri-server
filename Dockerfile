@@ -4,9 +4,7 @@ WORKDIR /app
 COPY . .
 
 
-RUN npm install
-RUN node ace build --production
-RUN cd build && npm ci --production
+RUN npm install && node ace build --production && cd build && npm ci --production
 
 ENV NODE_ENV=production
 ENV PORT=80
