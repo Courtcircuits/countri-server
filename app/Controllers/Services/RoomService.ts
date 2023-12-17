@@ -1,11 +1,9 @@
 import Room from "App/Models/Room";
 import Transaction from "App/Models/Transaction";
-import User from "App/Models/User";
 
 class RoomService {
     public async destroy({ room_id, user_id }) {
         const room = await Room.findOrFail(room_id);
-        const user = await User.findOrFail(user_id);
 
         if (!await this.checkIfInRoom(user_id, room)) {
             throw new Error("User not in room");
@@ -13,6 +11,7 @@ class RoomService {
 
         await room.delete();
     }
+
     public async checkIfInRoom(user_id: number, room_id: Room);
     public async checkIfInRoom(user_id: number, room_id: number);
     public async checkIfInRoom(user_id: any, room_id: any): Promise<boolean> {

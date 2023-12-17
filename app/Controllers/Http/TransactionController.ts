@@ -5,7 +5,7 @@ import { inject } from '@adonisjs/core/build/standalone';
 @inject([RoomService])
 export default class TransactionController {
     private roomService = RoomService;
-    public async create({ auth, request, response }: HttpContextContract) {
+    public async create({ auth, request }: HttpContextContract) {
         const user = auth.use('api').user;
         if (!user) {
             return {
