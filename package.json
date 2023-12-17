@@ -7,6 +7,7 @@
     "build": "node ace build --production",
     "start": "node server.js",
     "test": "node ace test",
+    "tsc": "tsc",
     "lint": "eslint . --ext=.ts",
     "format": "prettier --write ."
   },

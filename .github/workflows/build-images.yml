@@ -1,11 +1,25 @@
 name: Image build and push
-run-name: ${{ github.actor }} is building and pushing the image of the backend to dockerhub 🚀
+run-name: ${{ github.actor }} is testing then building and pushing the image of the backend to dockerhub 🚀
 on:
   push:
     branches:
     - main
 
 jobs:
+  test_typescript:
+    name: Test typescript
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: 18.x
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm run tsc
   push_to_registry:
     name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
