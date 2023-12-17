@@ -1,8 +1,9 @@
 import Route from '@ioc:Adonis/Core/Route'
 
-Route.get('/users', 'UserController.index')
-Route.get('/users/me', 'UserController.get')
-Route.post('/login', 'UserController.login')
-Route.post('/register', 'UserController.register')
-Route.get('/rooms', 'UserController.listRooms')
-Route.post('/logout', 'UserController.logout')
+Route.group(() => {
+    Route.get('/users/me', 'UserController.get')
+    Route.get('/rooms', 'UserController.listRooms')
+}).middleware('auth')
+Route.post('/login', 'AuthenticationController.login')
+Route.post('/register', 'AuthenticationController.register')
+Route.post('/logout', 'AuthenticationController.logout')

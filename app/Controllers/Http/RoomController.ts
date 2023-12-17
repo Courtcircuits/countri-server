@@ -4,8 +4,13 @@ import Room from 'App/Models/Room';
 import AuthUser from 'App/Models/AuthUser';
 import { checkIfInRoom } from 'App/Utils/room_utils';
 import Transaction from 'App/Models/Transaction';
+import { inject } from '@adonisjs/core/build/standalone';
+import RoomService from '../Services/RoomService';
 
+@inject([RoomService])
 export default class RoomController {
+    private roomService = RoomService;
+
     public async get(ctx: HttpContextContract) {
         const user = ctx.auth.user;
         if (!user) {
@@ -418,59 +423,16 @@ export default class RoomController {
         };
     }
 
-    public async destroy(ctx: HttpContextContract) {
-        await ctx.auth.use('api').authenticate();
-        let room_id: number;
-        try {
-            room_id = parseInt(ctx.params.id);
-        } catch (e) {
-            ctx.response.status(500);
+    public async destroy({auth, room_id, response}) {
+        await auth.use('api').authenticate();
+        const user_id = auth.use('api').user?.user_id;
+
+        try{
+            await this.roomService.destroy({room_id, user_id});
+        }catch(e){
+            response.status(500);
             return {
-                message: 'room_id must be a number',
-            };
-        }
-
-        const user_id = ctx.auth.use('api').user?.user_id;
-
-        if (!user_id) {
-            ctx.response.status(401);
-            return {
-                message: 'user not found',
-                data: []
-            };
-        }
-
-
-
-        let room: Room;
-
-        try {
-            room = await Room.findOrFail(room_id);
-        } catch (e) {
-            ctx.response.status(404);
-            return {
-                message: 'room not found',
-                data: []
-            };
-        }
-
-
-        if (!await checkIfInRoom(user_id, room)) {
-            ctx.response.status(400);
-            return {
-                message: 'user not in room',
-                data: []
-            };
-        }
-
-        try {
-            await room.delete();
-        } catch (e) {
-            console.log(e);
-            ctx.response.status(500);
-            return {
-                message: 'room failed to delete',
-                data: []
+                message: e,
             };
         }
 
