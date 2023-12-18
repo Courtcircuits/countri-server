@@ -40,12 +40,36 @@ jobs:
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
         with:
           images: milou666/${{ secrets.DOCKER_IMAGE_NAME }}
-
+      - name: Extract version and set it to TAG env var
+        run: |
+          echo "TAG=$(jq -r '.version' package.json)" >> $GITHUB_ENV
       - name: Build and push Docker image
         uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: |
+            milou666/${{ secrets.DOCKER_IMAGE_NAME }}:latest
+            milou666/${{ secrets.DOCKER_IMAGE_NAME }}:${{ env.TAG }}
           labels: ${{ steps.meta.outputs.labels }}
+  deploy:
+    name: deploy_project
+    runs-on: ubuntu-latest
+    needs: push_to_registry
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v4
+      - name: Extract version and set it to TAG env var
+        run: |
+          echo "TAG=$(jq -r '.version' package.json)" >> $GITHUB_ENV
+      - name: Update values.yaml
+        run: |
+          cd deployment/front
+          sed -i 's|tag:.*|tag: "${{ env.TAG }}"|' values.yaml
+          git config --global user.name "CI deployment"
+          git config --global user.email "ci.deployment.ratathune@users.noreply.github.com"
+          git add values.yaml
+          git commit -m "${{ github.event.head_commit.message }}"
+          git push
+
