@@ -65,7 +65,7 @@ jobs:
           echo "TAG=$(jq -r '.version' package.json)" >> $GITHUB_ENV
       - name: Update values.yaml
         run: |
-          cd deployment/front
+          cd deployment/back
           sed -i 's|tag:.*|tag: "${{ env.TAG }}"|' values.yaml
           git config --global user.name "CI deployment"
           git config --global user.email "ci.deployment.ratathune@users.noreply.github.com"
