@@ -13,3 +13,7 @@ Route.group(() => {
     Route.post('/:id/destroy', 'RoomController.destroy')
     Route.get('/invite/:invite_code', 'RoomController.joinWithLink')
 }).prefix('/room').namespace('App/Controllers/Http').middleware('auth')
+
+Route.group(() => {
+    Route.get('/all', 'RoomController.getAllDetails')
+}).namespace('App/Controllers/Http').middleware('auth')

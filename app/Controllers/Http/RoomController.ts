@@ -103,7 +103,7 @@ export default class RoomController {
         }
         toReturn.transactions.sort((a, b) => {
             return Date.parse(b.date) - Date.parse(a.date);
-        });    
+        });
         return toReturn;
     }
 
@@ -137,7 +137,7 @@ export default class RoomController {
     }
 
     /**
-     * 
+     *
      * @param room a room orm object
      * @param user_id the id of the user /!\ not the auth_user id
      */
@@ -439,6 +439,20 @@ export default class RoomController {
         return {
             message: 'room deleted',
         };
+    }
+
+    public async getAllDetails({auth, response}: HttpContextContract) {
+        await auth.use('api').authenticate();
+        const user_id = auth.use('api').user?.user_id as number;
+
+        try{
+            return await this.roomService.getAllDetails(user_id);
+        }catch(e){
+            response.status(500);
+            return {
+                message: e,
+            };
+        }
     }
 
     public async joinWithLink(ctx: HttpContextContract) {
