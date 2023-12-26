@@ -1,5 +1,6 @@
 import Room from "App/Models/Room";
 import Transaction from "App/Models/Transaction";
+import User from "App/Models/User";
 
 class RoomService {
   public async destroy({ room_id, user_id }) {
@@ -10,6 +11,55 @@ class RoomService {
     }
 
     await room.delete();
+  }
+
+  public async getDetails(room_id: number, user_id: number): Promise<{
+    room_id: number,
+    name: string,
+    sold: number,
+    members: {
+      name: string,
+      avatar: string,
+    }[]
+  }> {
+    const room = await Room.findOrFail(room_id);
+    let debts: Transaction[];
+    let gifts: Transaction[];
+    try {
+
+      debts = await room.related('transactions').query().where('receiver_id', user_id)
+      gifts = await room.related('transactions').query().where('sender_id', user_id)
+    } catch (e) {
+      debts = [];
+      gifts = [];
+    }
+    const sum_debts = debts.reduce((a, b) => a + b.amount, 0) - gifts.reduce((a, b) => a + b.amount, 0);
+    const members = await room.related('users').query();
+    console.log(sum_debts);
+    return {
+      room_id: room.id,
+      name: room.name,
+      sold: sum_debts,
+      members: members.map((member) => {
+        return {
+          name: member.name,
+          avatar: member.profile_picture,
+        }
+      })
+    };
+  }
+
+  public async getAllDetails(user_id: number) {
+    const user = await User.findOrFail(user_id);
+    const rooms = await user.related('rooms').query();
+    console.log(rooms);
+    if (!rooms || rooms.length === 0) {
+      return [];
+    }
+    const rooms_details = await Promise.all(rooms.map(async (room) => {
+      return await this.getDetails(room.id, user_id);
+    }));
+    return rooms_details;
   }
 
   public async checkIfInRoom(user_id: number, room_id: Room);
