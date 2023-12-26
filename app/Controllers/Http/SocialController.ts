@@ -43,10 +43,8 @@ export default class SocialController {
             expiresIn: '30days',
         })
 
-        const room = (await user.related('rooms').query().first())?.id || 1;
-
         response.cookie('token', opaqueToken.token)
 
-        return response.redirect(Env.get('FRONTEND_URL') + '/dashboard/' + room)
-    }   
+        return response.redirect(Env.get('FRONTEND_URL') + '/dashboard')
+    }
 }
