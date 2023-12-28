@@ -1,3 +1,4 @@
+import AuthUser from "App/Models/AuthUser"
 import User from "App/Models/User"
 
 interface UserToSend {
@@ -39,6 +40,13 @@ class UserService {
                 name: room.name
             }
         })
+    }
+
+    public async listUsers(pattern: string): Promise<string[]> {
+      const users = await AuthUser.query().whereILike('email', '%'+pattern+'%').select('email').limit(10)
+      return users.map((user) => {
+        return user.email
+      });
     }
 }
 

@@ -7,7 +7,7 @@ export default class UserController {
     private userService = UserService
 
     public async get(ctx: HttpContextContract) {
-        const user_auth = await ctx.auth.use('api').user
+        const user_auth = ctx.auth.use('api').user
         if (!user_auth) {
             return {
                 message: 'user not found',
@@ -30,7 +30,7 @@ export default class UserController {
     }
 
     public async listRooms(ctx: HttpContextContract) {
-        const user = await (await ctx.auth.use('api').user)?.related('user').query().first()
+        const user = await ctx.auth.use('api').user?.related('user').query().first()
         if (!user) {
             return {
                 message: 'user not found',
@@ -50,5 +50,12 @@ export default class UserController {
                 data: []
             }
         }
+    }
+
+    public async list({request}: HttpContextContract){
+      const list = await this.userService.listUsers(request.input('q'))
+      return {
+        data: list
+      }
     }
 }
