@@ -52,8 +52,9 @@ export default class UserController {
         }
     }
 
-    public async list({request}: HttpContextContract){
-      const list = await this.userService.listUsers(request.input('q'))
+    public async list({request, auth}: HttpContextContract){
+      const user_id = auth.use('api').user?.id || 0
+      const list = await this.userService.listUsers(request.input('q'), user_id)
       return {
         data: list
       }
