@@ -42,8 +42,8 @@ class UserService {
         })
     }
 
-    public async listUsers(pattern: string): Promise<string[]> {
-      const users = await AuthUser.query().whereILike('email', '%'+pattern+'%').select('email').limit(10)
+    public async listUsers(pattern: string, user_id: number): Promise<string[]> {
+      const users = await AuthUser.query().whereNotIn('id', [user_id]).whereILike('email', '%'+pattern+'%').select('email').limit(10)
       return users.map((user) => {
         return user.email
       });
