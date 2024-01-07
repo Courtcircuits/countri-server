@@ -78,9 +78,9 @@ export default class InviteController {
             response.status(404);
             return response.json({ error: "Not found" });
         }
-        if (invite.sender_id != user_id) {
+        if (invite.receiver_id != user_id) {
             response.status(403);
-            return response.json({ error: "You are not the sender of this invite" });
+            return response.json({ error: "You are not the receiver of this invite" });
         }
         try {
             await invite.delete();
