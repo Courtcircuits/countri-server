@@ -9,7 +9,6 @@ class RoomService {
     if (!await this.checkIfInRoom(user_id, room)) {
       throw new Error("User not in room");
     }
-
     await room.delete();
   }
 
@@ -35,7 +34,6 @@ class RoomService {
     }
     const sum_debts = debts.reduce((a, b) => a + b.amount, 0) - gifts.reduce((a, b) => a + b.amount, 0);
     const members = await room.related('users').query();
-    console.log(sum_debts);
     return {
       room_id: room.id,
       name: room.name,

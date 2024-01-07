@@ -27,7 +27,6 @@ export default class AuthenticationController {
     Logger.info(password)
 
     const tokens = await auth.use('api').attempt(email, password)
-    console.log(tokens)
     response.cookie('token', tokens.token)
     const auth_user = auth.use('api').user
     const user = await auth_user?.related('user').query().first()
