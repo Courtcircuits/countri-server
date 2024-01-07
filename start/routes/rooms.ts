@@ -9,7 +9,7 @@ Route.group(() => {
     Route.get('/:id/invite_code', 'RoomController.getInviteCode')
     Route.get('/join/:invite', 'RoomController.join')
     Route.post('/:id/update', 'RoomController.update')
-    Route.post('/:id/kick', 'RoomController.kick')
+    Route.post('/:id/leave', 'RoomController.leave')
     Route.post('/:id/destroy', 'RoomController.destroy')
     Route.get('/invite/:invite_code', 'RoomController.joinWithLink')
 }).prefix('/room').namespace('App/Controllers/Http').middleware('auth')
