@@ -154,7 +154,6 @@ export default class RoomController {
         } else {
             room_orm = room;
         }
-        console.log(typeof room_orm);
         await room_orm.related('users').attach([user_id]);
         return true;
     }
@@ -425,9 +424,10 @@ export default class RoomController {
         };
     }
 
-    public async destroy({auth, room_id, response}) {
+    public async destroy({auth, params, response}) {
         await auth.use('api').authenticate();
         const user_id = auth.use('api').user?.user_id;
+        const room_id = params.id as number;
 
         try{
             await this.roomService.destroy({room_id, user_id});
