@@ -117,7 +117,7 @@ export default class RoomController {
             };
         }
         const room_id = ctx.params.id
-        let invite_code;
+        let invite_code: string;
 
         try {
             const user_orm = await User.findOrFail(user.user_id);
@@ -247,24 +247,24 @@ export default class RoomController {
         };
     }
 
-    public async update(ctx: HttpContextContract) {
+    public async update({params, response, request}) {
         let room_id: number;
         try {
-            room_id = parseInt(ctx.params.id);
+            room_id = parseInt(params.id);
         } catch (e) {
-            ctx.response.status(500);
+            response.status(500);
             return {
                 message: 'room id is not a number',
             };
         }
 
-        const room_name = ctx.request.input('name');
+        const room_name = request.input('name');
         try {
             const room = await Room.findOrFail(room_id)
             room.name = room_name;
             await room.save();
         } catch (e) {
-            ctx.response.status(404);
+            response.status(404);
             return {
                 message: 'room not found',
                 data: []
@@ -374,23 +374,25 @@ export default class RoomController {
     }
 
     // delete someone from a room
-    public async kick(ctx: HttpContextContract) {
-        await ctx.auth.use('api').authenticate();
+    public async leave({
+      auth, response, params
+    }) {
+        await auth.use('api').authenticate();
         let room_id: number;
         try {
-            room_id = parseInt(ctx.params.id);
+            room_id = parseInt(params.id);
         } catch (e) {
-            ctx.response.status(500);
+            response.status(500);
             return {
-                message: 'roomt_id must be a number',
+                message: 'room_id must be a number',
             };
         }
 
         let user_id: number;
         try {
-            user_id = parseInt(ctx.request.input('user_id'));
+            user_id = auth.use('api').user?.user_id as number;
         } catch (e) {
-            ctx.response.status(500);
+            response.status(500);
             return {
                 message: 'user_id must be a number',
             };
@@ -401,7 +403,7 @@ export default class RoomController {
         try {
             room = await Room.findOrFail(room_id);
         } catch (e) {
-            ctx.response.status(404);
+            response.status(404);
             return {
                 message: 'room not found',
                 data: []
@@ -409,7 +411,7 @@ export default class RoomController {
         }
 
         if (!await checkIfInRoom(user_id, room)) {
-            ctx.response.status(400);
+            response.status(400);
             return {
                 message: 'user not in room',
                 data: []
