@@ -48,6 +48,19 @@ class UserService {
         return user.email
       });
     }
+
+    public async updateProfilePicture(user_id: number, user_email: string, url: string): Promise<UserToSend> {
+        const user = await User.findOrFail(user_id);
+        user.profile_picture = url;
+        await user.save()
+        return {
+            id: user.id,
+            name: user.name,
+            profile_picture: user.profile_picture,
+            email: user_email,
+            rooms: []
+        }
+    }
 }
 
 export default new UserService()
