@@ -8,7 +8,7 @@ export default class Transaction extends BaseModel {
   public id: number
 
   @column()
-  public room_id: number
+  public roomId: number
 
   @hasOne(() => Room)
   public room: HasOne<typeof Room>

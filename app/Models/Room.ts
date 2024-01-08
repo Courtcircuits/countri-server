@@ -15,6 +15,15 @@ export default class Room extends BaseModel {
   @hasMany(() => Transaction)
   public transactions: HasMany<typeof Transaction>
 
+  @column()
+  public room_id: number
+
+  @column()
+  public receiver_id: number
+
+  @column()
+  public sender_id: number
+
   @manyToMany(() => User, {
     pivotTable: 'room_user'
   })

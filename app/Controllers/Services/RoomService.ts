@@ -25,13 +25,14 @@ class RoomService {
     let debts: Transaction[];
     let gifts: Transaction[];
     try {
-
       debts = await room.related('transactions').query().where('receiver_id', user_id)
       gifts = await room.related('transactions').query().where('sender_id', user_id)
     } catch (e) {
+      console.log(e);
       debts = [];
       gifts = [];
     }
+    console.log(debts, gifts)
     const sum_debts = debts.reduce((a, b) => a + b.amount, 0) - gifts.reduce((a, b) => a + b.amount, 0);
     const members = await room.related('users').query();
     return {
@@ -93,7 +94,7 @@ class RoomService {
     let create_transaction: Transaction;
     if (type === "debt") {
       create_transaction = await Transaction.create({
-        room_id: room_id,
+        roomId: room_id,
         amount: amount,
         title: title,
         type: type,
@@ -102,7 +103,7 @@ class RoomService {
       });
     } else {
       create_transaction = await Transaction.create({
-        room_id: room_id,
+        roomId: room_id,
         amount: amount,
         title: title,
         type: type,
