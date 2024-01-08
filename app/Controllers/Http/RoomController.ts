@@ -36,6 +36,7 @@ export default class RoomController {
             members: {
                 name: string,
                 id: string,
+                profile_picture: string,
             }[],
             transactions: {
                 amount: number,
@@ -77,7 +78,8 @@ export default class RoomController {
         toReturn.members = users.map((user) => {
             return {
                 name: user.name,
-                id: user.id.toString()
+                id: user.id.toString(),
+                profile_picture: user.profile_picture
             }
         });
 
