@@ -16,7 +16,6 @@ export default class InviteController {
         let receiver_id: number;
         const sender_id = auth.user.id;
         receiver_id = parseInt(receiver)
-        console.log(receiver_id);
         if (isNaN(receiver_id)) {
             if (receiver.includes('@')) {
                 try {
@@ -31,12 +30,21 @@ export default class InviteController {
                 return response.json({ error: "Receiver not found" });
             }
         }
+        const receiver_user = await User.find(receiver_id);
+        const receiver_room_ids = await receiver_user?.related('rooms').query().select('id');
+        console.log('receiver_room_ids');
+        console.log(receiver_room_ids?.map((room) => room.id));
+        if (receiver_room_ids?.map((room) => room.id.toString()).includes(room_id)) {
+          response.status(403);
+          return response.json({ error: "User is already in the room" });
+        }
 
         try {
             invite = await Invite.create({ room_id, sender_id, receiver_id });
         } catch (e) {
             console.log(e);
-            return response.json({ error: "Error while creating invite" });
+            response.status(500);
+            return response.json({ error: "You can only send an invite at once" });
         }
         return response.json(invite);
     }

@@ -18,6 +18,10 @@ export default class extends BaseSchema {
       table.timestamp('created_at', { useTz: true })
       table.timestamp('updated_at', { useTz: true })
     })
+
+    this.schema.alterTable(this.tableName, (table) => {
+      table.unique(['room_id', 'sender_id', 'receiver_id']) // a user can only invite another user once
+    })
   }
 
   public async down () {
