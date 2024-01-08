@@ -46,12 +46,12 @@ const corsConfig: CorsConfig = {
   */
   origin: '*',
 
-  methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH'],
 
- 
+
   headers: true,
 
- 
+
   exposeHeaders: [
     'cache-control',
     'content-language',
@@ -61,7 +61,7 @@ const corsConfig: CorsConfig = {
     'pragma',
   ],
 
- 
+
   credentials: true,
 
   maxAge: 90,

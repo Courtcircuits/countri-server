@@ -72,10 +72,9 @@ export default class UserController {
         data: []
       }
     }
-    const path = `profile_pictures/${user_id}/${coverImage.clientName.split(' ').join('_')}`
     let url: string = '';
     try {
-      url = await this.imagesService.uploadImage(coverImage, path)
+      url = await this.imagesService.uploadImage(coverImage)
     } catch (e) {
       console.log(e)
       response.status(500)
@@ -98,6 +97,47 @@ export default class UserController {
       response.status(500)
       return {
         message: 'error updating profile picture',
+        data: []
+      }
+    }
+  }
+
+
+  public async updateName({ request, auth, response }: HttpContextContract) {
+    const user_id = (await auth.use('api').user?.related('user').query().first())?.id || 0
+    const user_email = auth.use('api').user?.email || ''
+    const name = request.input('name')
+    try {
+      const user = await this.userService.updateName(user_id, user_email, name)
+      return {
+        message: 'name updated',
+        data: user
+      }
+    } catch (e) {
+      console.log(e)
+      response.status(500)
+      return {
+        message: 'error updating name',
+        data: []
+      }
+    }
+  }
+
+
+  public async updateEmail({ request, auth, response }: HttpContextContract) {
+    const user_id = auth.use('api').user?.id || 0
+    const email = request.input('email')
+    try {
+      const user = await this.userService.updateEmail(user_id, email)
+      return {
+        message: 'email updated',
+        data: user
+      }
+    } catch (e) {
+      console.log(e)
+      response.status(500)
+      return {
+        message: 'error updating email',
         data: []
       }
     }

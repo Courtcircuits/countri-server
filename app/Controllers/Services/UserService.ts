@@ -61,6 +61,29 @@ class UserService {
             rooms: []
         }
     }
+
+    public async updateName(user_id: number, user_email: string, name: string): Promise<UserToSend> {
+      const user = await User.findOrFail(user_id);
+      user.name = name;
+      await user.save()
+      return {
+          id: user.id,
+          name: user.name,
+          profile_picture: user.profile_picture,
+          email: user_email,
+          rooms: []
+      }
+    }
+
+    // it is the id from the auth_user table !!!!
+    public async updateEmail(user_id: number, email: string): Promise<{email:string}> {
+      const user = await AuthUser.findOrFail(user_id);
+      user.email = email;
+      await user.save()
+      return {
+          email: email
+      }
+    }
 }
 
 export default new UserService()
