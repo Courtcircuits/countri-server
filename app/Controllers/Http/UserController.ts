@@ -67,7 +67,7 @@ export default class UserController {
     const user_email = auth.use('api').user?.email || ''
     const coverImage = request.file('profile_picture', {
       size: '2mb',
-      extnames: ['jpg', 'png', 'jpeg']
+      extnames: ['jpg', 'png', 'jpeg', 'gif']
     });
     if (!coverImage) {
       response.status(400)
