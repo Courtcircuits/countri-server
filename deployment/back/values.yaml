@@ -25,4 +25,4 @@ global:
 s3:
   region: "europe-west1"
   bucket: "ratathune"
-  endpoint: "avatars.ratathune.fr"
+  endpoint: "https://avatars.ratathune.fr"
