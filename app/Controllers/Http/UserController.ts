@@ -65,10 +65,22 @@ export default class UserController {
   public async updateProfilePicture({ request, auth, response }: HttpContextContract) {
     const user_id = auth.use('api').user?.id || 0
     const user_email = auth.use('api').user?.email || ''
-    const coverImage = request.file('profile_picture');
+    const coverImage = request.file('profile_picture', {
+      size: '2mb',
+      extnames: ['jpg', 'png', 'jpeg']
+    });
     if (!coverImage) {
+      response.status(400)
       return {
         message: 'file not found',
+        data: []
+      }
+    }
+
+    if (!coverImage.isValid) {
+      response.status(400)
+      return {
+        message: 'invalid file',
         data: []
       }
     }
@@ -107,6 +119,7 @@ export default class UserController {
     const user_id = (await auth.use('api').user?.related('user').query().first())?.id || 0
     const user_email = auth.use('api').user?.email || ''
     const name = request.input('name')
+    console.log('new name', name)
     try {
       const user = await this.userService.updateName(user_id, user_email, name)
       return {

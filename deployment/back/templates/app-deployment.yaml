@@ -63,3 +63,30 @@ spec:
             configMapKeyRef:
               name: app-configmap
               key: GOOGLE_CALLBACK_URL
+        - name: S3_REGION
+          valueFrom:
+            configMapKeyRef:
+              name: app-configmap
+              key: S3_REGION
+        - name: S3_BUCKET
+          valueFrom:
+            configMapKeyRef:
+              name: app-configmap
+              key: S3_BUCKET
+        - name: S3_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: app-configmap
+              key: S3_ENDPOINT
+        - name: S3_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: dotfile-secret
+              key: S3_SECRET
+        - name: S3_KEY
+          valueFrom:
+            secretKeyRef:
+              name: dotfile-secret
+              key: S3_KEY
+
+

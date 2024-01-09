@@ -7,3 +7,6 @@ data:
   FRONTEND_URL: https://{{ .Values.ratathune.host }}
   HOST: 0.0.0.0
   GOOGLE_CALLBACK_URL: https://api.{{ .Values.ratathune.host }}/google/callback
+  S3_REGION: {{ .Values.s3.region }}
+  S3_ENDPOINT: {{ .Values.s3.endpoint }}
+  S3_BUCKET: {{ .Values.s3.bucket }}

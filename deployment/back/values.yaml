@@ -21,3 +21,8 @@ global:
       database: "ratathune"
     service:
       port: "5432"
+
+s3:
+  region: "europe-west1"
+  bucket: "ratathune"
+  endpoint: "avatars.ratathune.fr"
