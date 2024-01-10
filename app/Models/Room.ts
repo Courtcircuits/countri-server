@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, HasMany, ManyToMany, beforeCreate, column, hasMany, manyToMany} from '@ioc:Adonis/Lucid/Orm'
+import { BaseModel, HasMany, ManyToMany, beforeCreate, column, hasMany, manyToMany, hasOne, HasOne} from '@ioc:Adonis/Lucid/Orm'
 import { randomUUID } from 'node:crypto'
 import Transaction from './Transaction'
 import User from './User'
@@ -20,6 +20,14 @@ export default class Room extends BaseModel {
 
   @column()
   public receiver_id: number
+
+  @column()
+  public admin_id: number
+
+  @hasOne(() => User,{
+    foreignKey: 'admin_id'
+  })
+  public admin: HasOne<typeof User>
 
   @column()
   public sender_id: number
