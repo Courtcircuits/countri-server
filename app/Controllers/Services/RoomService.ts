@@ -16,6 +16,7 @@ class RoomService {
     room_id: number,
     name: string,
     sold: number,
+    isAdmin: boolean,
     members: {
       name: string,
       avatar: string,
@@ -38,6 +39,7 @@ class RoomService {
     return {
       room_id: room.id,
       name: room.name,
+      isAdmin: room.admin_id === user_id,
       sold: sum_debts,
       members: members.map((member) => {
         return {
