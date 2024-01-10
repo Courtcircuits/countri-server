@@ -426,10 +426,21 @@ export default class RoomController {
         };
     }
 
-    public async destroy({auth, params, response}) {
+    public async destroy({auth, params, response, bouncer}) {
         await auth.use('api').authenticate();
         const user_id = auth.use('api').user?.user_id;
         const room_id = params.id as number;
+
+        try {
+          const user = await User.findOrFail(user_id);
+          await bouncer.authorize('destroyRoom', user, room_id);
+        }catch(e){
+          response.status(400);
+          return {
+            message: 'user not found',
+            data: []
+          };
+        }
 
         try{
             await this.roomService.destroy({room_id, user_id});
