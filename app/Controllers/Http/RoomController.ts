@@ -2,7 +2,6 @@ import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
 import User from 'App/Models/User';
 import Room from 'App/Models/Room';
 import AuthUser from 'App/Models/AuthUser';
-import { checkIfInRoom } from 'App/Utils/room_utils';
 import Transaction from 'App/Models/Transaction';
 import { inject } from '@adonisjs/core/build/standalone';
 import RoomService from '../Services/RoomService';
@@ -11,8 +10,8 @@ import RoomService from '../Services/RoomService';
 export default class RoomController {
   private roomService = RoomService;
 
-  public async get(ctx: HttpContextContract) {
-    const user = ctx.auth.user;
+  public async get({auth, bouncer, response, params}: HttpContextContract) {
+    const user = auth.user;
     if (!user) {
       return {
         message: 'user not found',
@@ -21,9 +20,9 @@ export default class RoomController {
     }
     let room_id: number;
     try {
-      room_id = ctx.params.id;
+      room_id = params.id;
     } catch (e) {
-      ctx.response.status(400);
+      response.status(400);
       return {
         message: 'room_id not found',
         data: []
@@ -58,20 +57,13 @@ export default class RoomController {
     try {
       room = await Room.findOrFail(room_id);
     } catch (e) {
-      ctx.response.status(404);
+      response.status(404);
       return {
         message: 'room not found',
         data: []
       };
     }
 
-    if (!await checkIfInRoom(user.user_id, room)) {
-      ctx.response.status(400);
-      return {
-        message: 'user not in room',
-        data: []
-      };
-    }
 
     toReturn.name = room.name;
     toReturn.id = room.id.toString();
@@ -84,6 +76,8 @@ export default class RoomController {
         profile_picture: user.profile_picture
       }
     });
+
+    await bouncer.authorize('getRoom', room);
 
     let transactions: Transaction[];
     try {
@@ -199,30 +193,32 @@ export default class RoomController {
     };
   }
 
-  public async getAllTransactions(ctx: HttpContextContract) {
-    await ctx.auth.use('api').authenticate();
+  public async getAllTransactions({auth, bouncer, params, response}: HttpContextContract) {
+    await auth.use('api').authenticate();
     let room_id: number;
     try {
-      room_id = parseInt(ctx.params.id);
+      room_id = parseInt(params.id);
     } catch (e) {
-      ctx.response.status(400);
+      response.status(400);
       return {
         message: 'room_id not found',
         data: []
       };
     }
-    const user: AuthUser | undefined = ctx.auth.use('api').user;
+    const user: AuthUser | undefined = auth.use('api').user;
 
     if (!user) {
-      ctx.response.status(401);
+      response.status(401);
       return {
         message: 'user not found',
         data: []
       };
     }
 
-    if (!await checkIfInRoom(user.user_id, room_id)) {
-      ctx.response.status(400);
+    try{
+      await bouncer.authorize('getRoom', await Room.findOrFail(room_id));
+    }catch(e){
+      response.status(400);
       return {
         message: 'user not in room',
         data: []
@@ -234,14 +230,14 @@ export default class RoomController {
     try {
       transactions = await Transaction.query().where('room_id', room_id);
     } catch (e) {
-      ctx.response.status(404);
+      response.status(404);
       return {
         message: 'room not found',
         data: []
       };
     }
     if (transactions.length === 0) {
-      ctx.response.status(404);
+      response.status(404);
       return {
         message: 'no transactions found',
         data: []
@@ -253,7 +249,7 @@ export default class RoomController {
     };
   }
 
-  public async update({ params, response, request }) {
+  public async update({ params, response, request, bouncer }) {
     let room_id: number;
     try {
       room_id = parseInt(params.id);
@@ -263,10 +259,32 @@ export default class RoomController {
         message: 'room id is not a number',
       };
     }
-
     const room_name = request.input('name');
+
+    let room: Room;
+
+    try{
+      room = await Room.findOrFail(room_id)
+    }catch(e){
+      response.status(404);
+      return {
+        message: 'room not found',
+        data: []
+      };
+    }
+
+    try{
+      await bouncer.authorize('updateRoom', room);
+    }catch(e){
+      console.log(e);
+      response.status(400);
+      return {
+        message: 'user not admin',
+        data: []
+      };
+    }
+
     try {
-      const room = await Room.findOrFail(room_id)
       room.name = room_name;
       await room.save();
     } catch (e) {
@@ -332,9 +350,9 @@ export default class RoomController {
     };
   }
 
-  public async getUsers(ctx: HttpContextContract) {
-    await ctx.auth.use('api').authenticate();
-    const user = ctx.auth.use('api').user;
+  public async getUsers({auth, bouncer, response, request, params}:HttpContextContract) {
+    await auth.use('api').authenticate();
+    const user = auth.use('api').user;
 
     if (!user) {
       return {
@@ -346,9 +364,9 @@ export default class RoomController {
     let room: Room;
 
     try {
-      room = await Room.findOrFail(ctx.params.id);
+      room = await Room.findOrFail(params.id);
     } catch (e) {
-      ctx.response.status(404);
+      response.status(404);
       return {
         message: 'room not found',
         data: []
@@ -356,15 +374,17 @@ export default class RoomController {
     }
 
 
-    if (!await checkIfInRoom(user.user_id, room)) {
-      ctx.response.status(400);
+    try{
+      await bouncer.authorize('getRoom', room);
+    }catch(e){
+      response.status(400);
       return {
         message: 'user not in room',
         data: []
       };
     }
 
-    const room_id = ctx.request.input('room_id');
+    const room_id = request.input('room_id');
     const users = await room.related('users').query().where('room_id', room_id);
 
     if (users.length === 0) {
@@ -381,8 +401,8 @@ export default class RoomController {
 
   // delete someone from a room
   public async leave({
-    auth, response, params
-  }) {
+    auth, response, params, bouncer
+  }: HttpContextContract) {
     await auth.use('api').authenticate();
     let room_id: number;
     try {
@@ -416,7 +436,9 @@ export default class RoomController {
       };
     }
 
-    if (!await checkIfInRoom(user_id, room)) {
+    try{
+      await bouncer.authorize('getRoom', room);
+    }catch(e){
       response.status(400);
       return {
         message: 'user not in room',
@@ -433,7 +455,6 @@ export default class RoomController {
 
   public async destroy({ auth, params, response, bouncer }) {
     await auth.use('api').authenticate();
-    const user_id = auth.use('api').user?.user_id as number;
     const room_id = params.id as number;
 
     try {
@@ -448,7 +469,7 @@ export default class RoomController {
     }
 
     try {
-      await this.roomService.destroy({ room_id, user_id });
+      await this.roomService.destroy({ room_id });
     } catch (e) {
       response.status(500);
       return {
@@ -525,4 +546,7 @@ export default class RoomController {
       message: 'room joined',
     };
   }
+
+
+
 }

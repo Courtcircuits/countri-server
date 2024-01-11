@@ -6,9 +6,8 @@
  */
 
 import Bouncer from '@ioc:Adonis/Addons/Bouncer'
-import AuthUser from 'App/Models/AuthUser'
-import Room from 'App/Models/Room'
-import User from 'App/Models/User'
+import { isAdmin } from './bouncers/admin'
+import { isInRoom } from './bouncers/room'
 
 /*
 |--------------------------------------------------------------------------
@@ -33,11 +32,9 @@ import User from 'App/Models/User'
 |****************************************************************
 */
 export const { actions } = Bouncer
-  .define('destroyRoom', async (auth_user: AuthUser, room: Room) => {
-    const user = await User.findOrFail(auth_user.user_id)
-    console.log(user.id, room.admin_id)
-    return room.admin_id === user.id
-  })
+  .define('destroyRoom', isAdmin)
+  .define('updateRoom', isAdmin)
+  .define('getRoom', isInRoom)
 
 /*
 |--------------------------------------------------------------------------
