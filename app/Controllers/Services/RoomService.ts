@@ -3,12 +3,8 @@ import Transaction from "App/Models/Transaction";
 import User from "App/Models/User";
 
 class RoomService {
-  public async destroy({ room_id, user_id }) {
+  public async destroy({ room_id}) {
     const room = await Room.findOrFail(room_id);
-
-    if (!await this.checkIfInRoom(user_id, room)) {
-      throw new Error("User not in room");
-    }
     await room.delete();
   }
 
@@ -81,7 +77,7 @@ class RoomService {
     if (check.length === 0) {
       return false;
     }
-    return true;
+    return check.length > 0;
   }
 
   public async createTransaction({ room_id, amount, title, type, sender_id, target_user_id }): Promise<Transaction> {
@@ -116,8 +112,6 @@ class RoomService {
 
     return create_transaction;
   }
-
-
 }
 
 export default new RoomService()
