@@ -12,7 +12,7 @@ ratathune:
   host: "ratathune.fr"
 
 db:
-  host: "postgresql.ratathune.svc.cluster.local"
+  host: "ratathune-postgresql.ratathune.svc.cluster.local"
 
 global:
   postgresql:
